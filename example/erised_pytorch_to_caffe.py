@@ -7,8 +7,8 @@ sys.path.insert(0, '.')
 
 import torch
 from torch.autograd import Variable
-import pytorch_to_caffe
-import pytorch_analyser
+import nn_tools.pytorch_to_caffe as pytorch_to_caffe
+import nn_tools.pytorch_analyser as pytorch_analyser
 
 import argparse
 import os
