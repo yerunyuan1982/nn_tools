@@ -122,14 +122,19 @@ def _pool(type,raw,input,x,kernel_size,stride,padding,ceil_mode):
                                   bottom=[log.blobs(input)], top=top_blobs)
     # TODO w,h different kernel, stride and padding
     # processing ceil mode
+    oheight = (input.size()[2] - _pair(kernel_size)[0] + 2 * _pair(padding)[0]) % (_pair(stride)[0])
+    owidth = (input.size()[3] - _pair(kernel_size)[1] + 2 * _pair(padding)[1]) % (_pair(stride)[1])
+    caffe_padding = padding
+    if ceil_mode == False and stride is not None and (oheight!=0 or owidth!=0):
+        if caffe_padding > 0:
+            caffe_padding = caffe_padding - 1
     layer.pool_param(kernel_size=kernel_size, stride=kernel_size if stride is None else stride,
-                     pad=padding, type=type.upper())
+                     pad=caffe_padding, type=type.upper())
+
     log.cnet.add_layer(layer)
     if ceil_mode==False and stride is not None:
-        oheight = (input.size()[2] - _pair(kernel_size)[0] + 2 * _pair(padding)[0]) % (_pair(stride)[0])
-        owidth = (input.size()[3] - _pair(kernel_size)[1] + 2 * _pair(padding)[1]) % (_pair(stride)[1])
         if oheight!=0 or owidth!=0:
-            caffe_out=raw(input, kernel_size, stride, padding, ceil_mode=True)
+            caffe_out=raw(input, kernel_size, stride, caffe_padding, ceil_mode=True)
             print("WARNING: the output shape miss match at {}: "
                   "input {} output---Pytorch:{}---Caffe:{}\n"
                   "This is caused by the different implementation that ceil mode in caffe and the floor mode in pytorch.\n"
