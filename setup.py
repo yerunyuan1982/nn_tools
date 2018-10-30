@@ -16,7 +16,7 @@ install_reqs = parse_requirements('requirements.txt', session='null')
 reqs = [str(ir.req) for ir in install_reqs]
 
 
-with open('README.md') as f:
+with open('README.md', encoding='UTF-8') as f:
   long_description = f.read()
 
 
