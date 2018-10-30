@@ -15,7 +15,7 @@ import os
 
 from attributer.model import generate_model
 
-def model_convertor(opt):
+def erised_model_convertor(opt):
     if not os.path.exists(opt.out_path):
         os.makedirs(opt.out_path)
     analysis_path = os.path.join(opt.out_path, '{}_analysis.csv'.format(opt.out_model_name))
@@ -82,4 +82,4 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    model_convertor(args)
+    erised_model_convertor(args)
