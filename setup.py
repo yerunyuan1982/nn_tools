@@ -16,19 +16,24 @@ install_reqs = parse_requirements('requirements.txt', session='null')
 reqs = [str(ir.req) for ir in install_reqs]
 
 
-with open('README.md') as f:
-  long_description = f.read()
+# with open('README.md') as f:
+#  long_description = f.read()
 
 
 setup(name='nn_tools',
       version='0.1.0',
       description='The deep learning models convertor',
-      long_description=long_description,
+      long_description= """The deep learning models convertor""", 
+      # long_description,
       long_description_content_type='text/markdown',
-      url='https://github.com/hahnyuan/nn_tools',
+      url='https://github.com/yerunyuan1982/nn_tools.git',
       author='hahnyuan',
       author_email='hahnyuan@gmail.com',
       license='MIT',
       packages=find_packages(),
       install_requires=reqs,
-      zip_safe=False)
+      #install_requires=[
+      #      'torch>=0.2.0',
+      #],
+      zip_safe=False
+      )
