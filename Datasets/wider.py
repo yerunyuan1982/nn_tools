@@ -31,16 +31,16 @@ class WiderDataset():
 
     def _load_cache(self):
         if os.path.exists(self.cache_file):
-            print 'load from cache file',self.cache_file
+            print('load from cache file',self.cache_file)
             st_time=time.time()
             self.file_names, self.boxes, self.annotations =pickle.load(open(self.cache_file))
-            print time.time()-st_time,'s used'
+            print(time.time()-st_time,'s used')
             return True
         return False
 
     def _read_data(self):
         mat_path=self._data_path + '/wider_face_split/wider_face_%s.mat'%(self.set,)
-        print 'load from mat file', mat_path
+        print('load from mat file', mat_path)
         st_time = time.time()
         f = h5py.File(mat_path)
         # f=sio.loadmat(self._data_path + '/wider_face_split/wider_face_val.mat')
@@ -63,7 +63,7 @@ class WiderDataset():
             for im_file in f[folder][0]:
                 s = "".join([chr(c) for c in f[im_file]])
                 file_names.append(self._data_path + '/images_no_fold/' + s + '.jpg')
-        print time.time() - st_time, 's used'
+        print(time.time() - st_time, 's used')
         return file_names, boxes, annotations
 
     def sift_hard(self,idx,min_area=240,blur=True,pose=True,occlusion=True,invalid=True):

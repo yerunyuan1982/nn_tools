@@ -59,13 +59,13 @@ class Imagenet_LMDB(lmdb_datasets.LMDB):
             try:
                 data = self.data_transfrom(data, datum.other)
             except:
-                print 'cannot trans ', data.shape
+                print('cannot trans ', data.shape)
                 continue
             target = int(datum.target)
             target = self.target_transfrom(target)
             self.data.put(data)
             self.target.put(target)
-            # print 'read_from_lmdb', time.time()-r
+            # print('read_from_lmdb', time.time()-r)
         del dataset
 
     # def read_from_lmdb(self):

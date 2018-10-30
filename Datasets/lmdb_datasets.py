@@ -32,7 +32,7 @@ class LMDB_generator(object):
     def generate_dataset(self,datas,targets,others=None):
         dataset = pb2.Dataset()
         assert len(datas)==len(targets),ValueError('the lengths of datas and targets are not the same')
-        for idx in xrange(len(datas)):
+        for idx in range(len(datas)):
             try:
                 if others==None:
                     datum=self.generate_datum(datas[idx],targets[idx])

@@ -21,7 +21,7 @@ def read_txt(root_path,cache_dir='/tmp'):
     cache_file = os.path.join(cache_dir, 'adience.pth')
 
     if not os.path.isfile(cache_file):
-        print "generating cache_file"
+        print("generating cache_file")
         image_paths, face_ids, ages, genders, locations, angs, yaws, scores=[],[],[],[],[],[],[],[]
         for txt in txt_list:
             txt_path = os.path.join(root_path, txt)
@@ -53,9 +53,9 @@ def read_txt(root_path,cache_dir='/tmp'):
         save_obj=[image_paths, face_ids, ages, genders, locations, angs, yaws, scores]
         pickle.dump(save_obj, open(cache_file, 'wb'))
     else:
-        print "read from cache_file"
+        print("read from cache_file")
         image_paths, face_ids, ages, genders, locations, angs, yaws, scores = pickle.load(open(cache_file, 'rb'))
-    print "read mat OK"
+    print("read mat OK")
     return image_paths, face_ids, ages, genders, locations, angs, yaws, scores
 
 if __name__=='__main__':

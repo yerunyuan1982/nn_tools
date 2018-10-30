@@ -9,7 +9,7 @@ def read_mat(mat_path,cache_dir='/tmp'):
     # Storing in the cache file (default in `/tmp/imdb_wiki.pth`).
     cache_file = os.path.join(cache_dir,'imdb_wiki.pth')
     if not os.path.isfile(cache_file):
-        print "generating cache_file"
+        print("generating cache_file")
         file = sio.loadmat(mat_path)
         image_paths = file['imdb'][0][0]['full_path'][0]
         image_paths = [full_path[0] for full_path in image_paths]
@@ -24,9 +24,9 @@ def read_mat(mat_path,cache_dir='/tmp'):
         pickle.dump([image_paths, face_locations, genders, ages,
                      face_scores, second_face_scores], open(cache_file, 'wb'))
     else:
-        print "read from cache_file"
+        print("read from cache_file")
         image_paths, face_locations, genders, ages, face_scores, second_face_scores = pickle.load(open(cache_file, 'rb'))
-    print "read mat OK"
+    print("read mat OK")
     return image_paths, face_locations, genders, ages, face_scores, second_face_scores
 
 def crop_image(mat_path,input_dir,output_dir,expand_rate=0,max_size=600):
