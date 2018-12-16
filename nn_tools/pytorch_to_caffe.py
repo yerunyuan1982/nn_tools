@@ -41,6 +41,8 @@ class TransLog(object):
         doing init() with inputs Variable before using it
         """
         self.layers={}
+        self.detail_layers={}  
+        self.detail_blobs={}  
         self._blobs=Blob_LOG()
         self._blobs_data=[]
         self.cnet=caffe_net.Caffemodel('')
@@ -53,14 +55,20 @@ class TransLog(object):
         """
         self.add_blobs(inputs)
     def add_layer(self,name='layer'):
-        name='noname_'+name
+        # name='noname_'+name
         if name in self.layers:
             return self.layers[name]
-        if self.pytorch_layer_name:
+        # if self.pytorch_layer_name:
+        if self.pytorch_layer_name and (name=='fc'):
+        # if False:
             name=self.pytorch_layer_name
-            self.pytorch_layer_name=None
         else:
-            name='{}{}'.format(name,len(self.layers))
+            # name='{}{}'.format(name,len(self.layers))
+            if name not in self.detail_layers.keys():
+                self.detail_layers[name] =0
+            self.detail_layers[name] +=1
+            name='{}{}'.format(name,self.detail_layers[name])
+        self.pytorch_layer_name = None
         self.layers[name]=name
         if self.debug:
             print("{} was added to layers".format(self.layers[name]))
@@ -71,8 +79,12 @@ class TransLog(object):
         for blob in blobs:
             self._blobs_data.append(blob) # to block the memory address be rewrited
             blob_id=int(id(blob))
+            if name not in self.detail_blobs.keys():
+                self.detail_blobs[name] = 0
+            self.detail_blobs[name] += 1
             if with_num:
-                rst.append('{}{}'.format(name,len(self._blobs)))
+                # rst.append('{}{}'.format(name,len(self._blobs)))
+                rst.append('{}{}'.format(name,self.detail_blobs[name]))
             else:
                 rst.append('{}'.format(name))
             if self.debug:
@@ -205,7 +217,7 @@ def _cat(raw,inputs, dimension=0):
     return x
 
 def _dropout(raw,input,p=0.5, training=False, inplace=False):
-    x=raw(input,p, training, False)
+    x=raw(input,p, training, inplace)
     bottom_blobs=[log.blobs(input)]
     layer_name=log.add_layer(name='dropout')
     top_blobs=log.add_blobs([x],name=bottom_blobs[0],with_num=False)
@@ -219,16 +231,17 @@ def _dropout(raw,input,p=0.5, training=False, inplace=False):
 def _threshold(raw,input, threshold, value, inplace=False):
     # for threshold or relu
     if threshold==0 and value==0:
-        x = raw(input,threshold, value, False)
+        x = raw(input,threshold, value, inplace)
+        bottom_blobs=[log.blobs(input)]
         name = log.add_layer(name='relu')
         log.add_blobs([x], name='relu_blob')
         layer = caffe_net.Layer_param(name=name, type='ReLU',
-                                      bottom=[log.blobs(input)], top=[log.blobs(x)])
+                                      bottom=bottom_blobs, top=[log.blobs(x)])
         log.cnet.add_layer(layer)
         return x
     if value!=0:
         raise NotImplemented("value !=0 not implemented in caffe")
-    x=raw(input,input, threshold, value, False)
+    x=raw(input,input, threshold, value, inplace)
     bottom_blobs=[log.blobs(input)]
     layer_name=log.add_layer(name='threshold')
     top_blobs=log.add_blobs([x],name='threshold_blob')
@@ -241,20 +254,22 @@ def _threshold(raw,input, threshold, value, inplace=False):
 def _relu(raw, input, inplace=False):
     # for threshold or prelu
     x = raw(input, False)
+    bottom_blobs=[log.blobs(input)]
     name = log.add_layer(name='relu')
     log.add_blobs([x], name='relu_blob')
     layer = caffe_net.Layer_param(name=name, type='ReLU',
-                                  bottom=[log.blobs(input)], top=[log.blobs(x)])
+                                  bottom=bottom_blobs, top=[log.blobs(x)])
     log.cnet.add_layer(layer)
     return x
 
 def _prelu(raw, input, weight):
     # for threshold or prelu
     x = raw(input, weight)
+    bottom_blobs=[log.blobs(input)]
     name = log.add_layer(name='prelu')
     log.add_blobs([x], name='prelu_blob')
     layer = caffe_net.Layer_param(name=name, type='PReLU',
-                                  bottom=[log.blobs(input)], top=[log.blobs(x)])
+                                  bottom=bottom_blobs, top=[log.blobs(x)])
     if weight.size()[0]==1:
         layer.param.prelu_param.channel_shared=True
         layer.add_data(weight.cpu().data.numpy()[0])
@@ -268,10 +283,11 @@ def _softmax(raw, input, dim=None, _stacklevel=3):
     x=raw(input, dim=dim)
     if dim is None:
         dim=F._get_softmax_dim('softmax', input.dim(), _stacklevel)
+    bottom_blobs=[log.blobs(input)]
     name = log.add_layer(name='softmax')
     log.add_blobs([x], name='softmax_blob')
     layer = caffe_net.Layer_param(name=name, type='Softmax',
-                                  bottom=[log.blobs(input)], top=[log.blobs(x)])
+                                  bottom=bottom_blobs, top=[log.blobs(x)])
     layer.param.softmax_param.axis=dim
     log.cnet.add_layer(layer)
     return x
@@ -426,7 +442,7 @@ class Rp(object):
                 layer=stack[0].f_locals['self']
                 if layer in layer_names:
                     log.pytorch_layer_name=layer_names[layer]
-                    print(layer_names[layer])
+                    # print(layer_names[layer])
                     break
         out=self.obj(self.raw,*args,**kwargs)
         # if isinstance(out,Variable):
