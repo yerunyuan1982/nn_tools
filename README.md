@@ -25,7 +25,7 @@ comparation ops, tot ops, weight size and so on] given a input tensor size, whic
 Before you analyse your network, [Netscope](http://ethereon.github.io/netscope/#/editor)
 is recommended to visiualize your network.
 
-Command: python caffe_analyser.py [-h] prototxt outdir shape`
+Command：`python caffe_analyser.py [-h] prototxt outdir shape`
 - The prototxt is the path of the prototxt file.
 - The outdir is path to save the csv file.
 - The shape is the input shape of the network(split by comma `,`), in caffe image shape should be: 
@@ -36,7 +36,7 @@ For example `python caffe_analyser.py resnet_18_deploy.prototxt analys_result.cs
 ## Pytorch
 Supporting analyse the inheritors of torch.nn.Moudule class.
 
-Command: pytorch_analyser.py [-h] [--out OUT] [--class_args ARGS] path name shape`
+Command：`pytorch_analyser.py [-h] [--out OUT] [--class_args ARGS] path name shape`
 - The path is the python file path which contaning your class.
 - The name is the class name or instance name in your python file.
 - The shape is the input shape of the network(split by comma `,`), in pytorch image shape should be:
@@ -50,7 +50,7 @@ For example `python pytorch_analyser.py example/resnet_pytorch_analysis_example.
 ## Mxnet
 Supporting analyse the inheritors of mxnet.sym.
 
-Command: mxnet_analyser.py [-h] [--out OUT] [--func_args ARGS] [--func_kwargs FUNC_KWARGS] path name shape`
+Command：`mxnet_analyser.py [-h] [--out OUT] [--func_args ARGS] [--func_kwargs FUNC_KWARGS] path name shape`
 - The path is the python file path which contaning your symbol definition.
 - the symbol object name or function that generate the symbol in your python file.
 - The shape is the input shape of the network(split by comma `,`), in mxnet image shape should be:
@@ -70,7 +70,7 @@ NOTICE: The transfer output will be somewhat different with the original model, 
 - Supporting layers types: conv2d, linear, max_pool2d, avg_pool2d, dropout,
  relu, prelu, threshold(only value=0),softmax, batch_norm
 - Supporting operations: torch.split, torch.max, torch.cat
-- Supporting tensor Variable operations: var.view, + (add), += (iadd), -(sub), -=(isub)
+- Supporting tensor Variable operations: var.view, var.mean, + (add), += (iadd), -(sub), -=(isub)
  \* (mul) *= (imul)
 
 The supported above can transfer many kinds of nets, 
