@@ -21,7 +21,7 @@ reqs = [str(ir.req) for ir in install_reqs]
 
 
 setup(name='nn_tools',
-      version='0.1.0',
+      version='0.1.1',
       description='The deep learning models convertor',
       long_description= """The deep learning models convertor""", 
       # long_description,

@@ -1,7 +1,7 @@
 import keras
-import Caffe.net as caffe
+from .Caffe import net as caffe
 import numpy as np
-from funcs import *
+from .funcs import *
 
 def convert_filter(numpy_filter_weight):
     return np.transpose(numpy_filter_weight,(3,2,1,0))

@@ -1,8 +1,8 @@
 # coding=utf-8
 from __future__ import absolute_import
 import argparse
-from analysis.MxnetA import *
-from analysis.utils import save_csv
+from .analysis.MxnetA import *
+from .analysis.utils import save_csv
 import os
 import sys
 import mxnet

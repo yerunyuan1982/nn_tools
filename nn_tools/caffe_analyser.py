@@ -1,9 +1,9 @@
 # coding=utf-8
 from __future__ import absolute_import
 import argparse
-from analysis.CaffeA import *
-from Caffe import caffe_net
-from analysis.utils import save_csv
+from .analysis.CaffeA import *
+from .Caffe import caffe_net
+from .analysis.utils import save_csv
 
 """
 Before you analyse your network, [Netscope](http://ethereon.github.io/netscope/#/editor)
