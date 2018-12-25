@@ -20,6 +20,7 @@ How to support a new layer type:
 
 # TODO: support the inplace output of the layers
 
+layer_names_file = None
 
 NET_INITTED=False
 
@@ -48,28 +49,31 @@ class TransLog(object):
         self.cnet=caffe_net.Caffemodel('')
         self.debug=False
         self.pytorch_layer_name=None
+        self.current_layer_name=None
 
     def init(self,inputs):
         """
         :param inputs: is a list of input variables
         """
         self.add_blobs(inputs)
+
     def add_layer(self,name='layer'):
-        # name='noname_'+name
         if name in self.layers:
             return self.layers[name]
-        # if self.pytorch_layer_name:
-        if self.pytorch_layer_name and (name=='fc'):
-        # if False:
-            name=self.pytorch_layer_name
+        if self.pytorch_layer_name:
+            name = self.pytorch_layer_name
         else:
-            # name='{}{}'.format(name,len(self.layers))
-            if name not in self.detail_layers.keys():
-                self.detail_layers[name] =0
-            self.detail_layers[name] +=1
-            name='{}{}'.format(name,self.detail_layers[name])
+            name = 'noname_' + name
+
+        if name not in self.detail_layers.keys():
+            self.detail_layers[name] =0
+        self.detail_layers[name] +=1
+        name='{}{}'.format(name,self.detail_layers[name])
+        if self.pytorch_layer_name and layer_names_file:
+            layer_names_file.write('{},{}\n'.format(name, self.pytorch_layer_name))
         self.pytorch_layer_name = None
         self.layers[name]=name
+        self.current_layer_name = name
         if self.debug:
             print("{} was added to layers".format(self.layers[name]))
         return self.layers[name]
@@ -79,12 +83,13 @@ class TransLog(object):
         for blob in blobs:
             self._blobs_data.append(blob) # to block the memory address be rewrited
             blob_id=int(id(blob))
+            if self.current_layer_name:
+                name = self.current_layer_name + '_blob'
             if name not in self.detail_blobs.keys():
                 self.detail_blobs[name] = 0
             self.detail_blobs[name] += 1
             if with_num:
-                # rst.append('{}{}'.format(name,len(self._blobs)))
-                rst.append('{}{}'.format(name,self.detail_blobs[name]))
+                rst.append('{}{}'.format(name, self.detail_blobs[name]))
             else:
                 rst.append('{}'.format(name))
             if self.debug:
@@ -315,6 +320,66 @@ def _batch_norm(raw,input, running_mean, running_var, weight=None, bias=None,
     log.cnet.add_layer(layer2)
     return x
 
+def _interpolate(raw, input, size=None, scale_factor=None, mode='nearest', align_corners=None):
+    x = raw(input, size, scale_factor, mode, align_corners)
+    if mode != 'nearest':
+        raise NotImplementedError('interpolate mode must be nearest')
+    name=log.add_layer(name='deconv')
+    log.add_blobs([x],name='deconv_blob')
+    # k_size = (2 * scale_factor - scale_factor % 2)
+    k_size = scale_factor
+    kernel_size = (k_size, k_size)
+    stride = (scale_factor, scale_factor)
+    # padding= (int(np.ceil((scale_factor - 1) / 2.)), int(np.ceil((scale_factor - 1) / 2.)))
+    padding = (0, 0)
+    # weight_filler_type = 'bilinear'
+    weight_filler_type = 'xavier'
+    out_channel_count = x.size()[1]
+    weight = np.zeros((out_channel_count, input.size()[1], k_size, k_size), np.float32)
+    val = np.ones((k_size, k_size), np.float32)
+    for i in range(out_channel_count):
+        np.copyto(weight[i, i, ...], val)
+
+    layer=caffe_net.Layer_param(name=name, type='Deconvolution',
+                                bottom=[log.blobs(input)], top=[log.blobs(x)])
+    layer.conv_param(x.size()[1],_pair(kernel_size),stride=_pair(stride),
+                     pad=_pair(padding),weight_filler_type=weight_filler_type,
+                     bias_term=False,dilation=None)
+
+    layer.param.convolution_param.bias_term=False
+    layer.add_data(weight)
+    log.cnet.add_layer(layer)
+    return x
+
+def _interpolate0(raw, input, size=None, scale_factor=None, mode='nearest', align_corners=None):
+    x = raw(input, size, scale_factor, mode, align_corners)
+    if mode != 'nearest':
+        raise NotImplementedError('interpolate mode must be nearest')
+    name=log.add_layer(name='deconv')
+    log.add_blobs([x],name='deconv_blob')
+    # k_size = (2 * scale_factor - scale_factor % 2)
+    k_size = scale_factor
+    kernel_size = (k_size, k_size)
+    stride = (scale_factor, scale_factor)
+    # padding= (int(np.ceil((scale_factor - 1) / 2.)), int(np.ceil((scale_factor - 1) / 2.)))
+    padding = (0, 0)
+    # weight_filler_type = 'bilinear'
+    weight_filler_type = 'xavier'
+
+    # weight = np.ones((x.size()[1], input.size()[1], k_size, k_size), np.float32)
+    weight = np.ones((x.size()[1], 1, k_size, k_size), np.float32)
+
+    layer=caffe_net.Layer_param(name=name, type='Deconvolution',
+                                bottom=[log.blobs(input)], top=[log.blobs(x)])
+    layer.conv_param(x.size()[1],_pair(kernel_size),stride=_pair(stride),
+                     pad=_pair(padding),weight_filler_type=weight_filler_type,
+                     bias_term=False,dilation=None,groups=x.size()[1])
+
+    layer.param.convolution_param.bias_term=False
+    layer.add_data(weight)
+    log.cnet.add_layer(layer)
+    return x
+
 # ----- for Variable operations --------
 
 def _view(input, *args):
@@ -459,6 +524,7 @@ F.threshold=Rp(F.threshold,_threshold)
 F.prelu=Rp(F.prelu,_prelu)
 F.batch_norm=Rp(F.batch_norm,_batch_norm)
 F.softmax=Rp(F.softmax,_softmax)
+F.interpolate=Rp(F.interpolate, _interpolate)
 
 torch.split=Rp(torch.split,_split)
 torch.max=Rp(torch.max,_max)
@@ -503,17 +569,39 @@ except:
         t.__imul__ = _imul
 
 
-def trans_net(net,input_var,name='TransferedPytorchModel'):
+def create_layer_names_file(layer_names_file_path):
+    global layer_names_file
+    if None == layer_names_file_path:
+        return None
+    if None != layer_names_file:
+        layer_names_file.close()
+    layer_names_file = open(layer_names_file_path, 'w')
+
+
+def close_layer_names_file():
+    global layer_names_file
+    if None != layer_names_file:
+        layer_names_file.close()
+
+
+def trans_net(net,input_var,name='TransferedPytorchModel',layer_names_path=None):
     print('Starting Transform, This will take a while')
+    # create_layer_names_file(layer_names_path)
     log.init([input_var])
     log.cnet.net.name=name
     log.cnet.net.input.extend([log.blobs(input_var)])
     log.cnet.net.input_dim.extend(input_var.size())
     global NET_INITTED
     NET_INITTED=True
+    # names_layer_dict = {}
     for name,layer in net.named_modules():
+        # if name not in names_layer_dict.keys():
+        #     names_layer_dict[name] = layer
+        # else:
+        #     print('Has Layer: ', name)
         layer_names[layer]=name
     out = net.forward(input_var)
+    # close_layer_names_file()
     print('Transform Completed')
 
 def save_prototxt(save_name):
@@ -521,3 +609,4 @@ def save_prototxt(save_name):
 
 def save_caffemodel(save_name):
     log.cnet.save(save_name)
+    # close_layer_names_file()
