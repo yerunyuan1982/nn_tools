@@ -73,13 +73,15 @@ class Layer_param():
             conv_param.group=groups
         self.param.convolution_param.CopyFrom(conv_param)
 
-    def pool_param(self,type='MAX',kernel_size=2,stride=2,pad=None):
+    def pool_param(self,type='MAX',kernel_size=2,stride=2,pad=None, round_mode=None):
         pool_param=pb.PoolingParameter()
         pool_param.pool=pool_param.PoolMethod.Value(type)
         pool_param.kernel_size=pair_process(kernel_size)
         pool_param.stride=pair_process(stride)
         if pad:
             pool_param.pad=pad
+        if round_mode:
+            pool_param.round_mode = pool_param.RoundMode.Value(round_mode)
         self.param.pooling_param.CopyFrom(pool_param)
 
     def batch_norm_param(self,use_global_stats=0,moving_average_fraction=None,eps=None):

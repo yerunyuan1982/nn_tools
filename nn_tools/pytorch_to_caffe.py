@@ -202,6 +202,22 @@ def _pool(type, raw, input, x, kernel_size, stride, padding, ceil_mode):
     top_blobs = log.add_blobs([x], name='{}_pool_blob'.format(type))
     layer = caffe_net.Layer_param(name=layer_name, type='Pooling',
                                   bottom=[log.blobs(input)], top=top_blobs)
+
+    if ceil_mode:
+        layer.pool_param(kernel_size=kernel_size, stride=kernel_size if stride is None else stride,
+                         pad=padding, type=type.upper(), round_mode='CEIL')
+    else:
+        layer.pool_param(kernel_size=kernel_size, stride=kernel_size if stride is None else stride,
+                         pad=padding, type=type.upper(), round_mode='FLOOR')
+    log.cnet.add_layer(layer)
+
+
+def _pool0(type, raw, input, x, kernel_size, stride, padding, ceil_mode):
+    # TODO dilation,ceil_mode,return indices
+    layer_name = log.add_layer(name='{}_pool'.format(type))
+    top_blobs = log.add_blobs([x], name='{}_pool_blob'.format(type))
+    layer = caffe_net.Layer_param(name=layer_name, type='Pooling',
+                                  bottom=[log.blobs(input)], top=top_blobs)
     # TODO w,h different kernel, stride and padding
     # processing ceil mode
     oheight = (input.size()[2] - _pair(kernel_size)[0] + 2 * _pair(padding)[0]) % (_pair(stride)[0])
