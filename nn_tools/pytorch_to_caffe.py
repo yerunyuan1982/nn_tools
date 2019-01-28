@@ -205,7 +205,8 @@ def _pool(type, raw, input, x, kernel_size, stride, padding, ceil_mode):
 
     if ceil_mode:
         layer.pool_param(kernel_size=kernel_size, stride=kernel_size if stride is None else stride,
-                         pad=padding, type=type.upper(), round_mode='CEIL')
+                         pad=padding, type=type.upper())
+                         # pad=padding, type=type.upper(), round_mode='CEIL')
     else:
         layer.pool_param(kernel_size=kernel_size, stride=kernel_size if stride is None else stride,
                          pad=padding, type=type.upper(), round_mode='FLOOR')
