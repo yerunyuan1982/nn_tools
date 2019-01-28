@@ -70,7 +70,8 @@ class Layer_param():
         if dilation:
             conv_param.dilation.extend(pair_reduce(dilation))
         if groups:
-            conv_param.group=groups
+            if groups != 1:
+                conv_param.group=groups
         self.param.convolution_param.CopyFrom(conv_param)
 
     def pool_param(self,type='MAX',kernel_size=2,stride=2,pad=None, round_mode=None):
@@ -90,7 +91,8 @@ class Layer_param():
         if moving_average_fraction:
             bn_param.moving_average_fraction=moving_average_fraction
         if eps:
-            bn_param.eps = eps
+            if eps != 1e-05:
+                bn_param.eps = eps
         self.param.batch_norm_param.CopyFrom(bn_param)
 
     def add_data(self,*args):
