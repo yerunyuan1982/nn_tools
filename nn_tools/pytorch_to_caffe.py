@@ -272,6 +272,17 @@ def _max(raw, *args):
     return x
 
 
+def _sigmoid(raw, input):
+    x = raw(input)
+    bottom_blobs = [log.blobs(input)]
+    name = log.add_layer(name='sigmoid')
+    log.add_blobs([x], name='sigmoid_blob')
+    layer = caffe_net.Layer_param(name=name, type='Sigmoid',
+                                  bottom=bottom_blobs, top=[log.blobs(x)])
+    log.cnet.add_layer(layer)
+    return x
+
+
 def _cat(raw, inputs, dimension=0):
     x = raw(inputs, dimension)
     bottom_blobs = []
@@ -677,6 +688,7 @@ F.interpolate = Rp(F.interpolate, _interpolate)
 
 torch.split = Rp(torch.split, _split)
 torch.max = Rp(torch.max, _max)
+torch.sigmoid = Rp(torch.sigmoid, _sigmoid)
 torch.cat = Rp(torch.cat, _cat)
 
 # TODO: other types of the view function
