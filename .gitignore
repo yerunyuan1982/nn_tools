@@ -7,3 +7,6 @@ output/*
 *.prototxt
 tmp/*
 nohup.out
+build/
+dist/
+*.egg-info/
